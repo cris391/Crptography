@@ -4,6 +4,14 @@ from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import tkinter
 
+"""For AES encryption and Public key encryption"""
+import nacl.secret
+import nacl.utils
+from nacl.public import PrivateKey, SealedBox
+
+"""Creation of RSA keys"""
+sk = PrivateKey.generate()
+pk = sk.public_key.encode(bytes)
 
 def receive():
     """Handles receiving of messages."""
@@ -67,6 +75,8 @@ ADDR = (HOST, PORT)
 
 client_socket = socket(AF_INET, SOCK_STREAM)
 client_socket.connect(ADDR)
+#sending publik key to server
+client_socket.send(pk)
 
 receive_thread = Thread(target=receive)
 receive_thread.start()
