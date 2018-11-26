@@ -11,7 +11,9 @@ from nacl.public import PrivateKey, SealedBox
 
 """Creation of RSA keys"""
 sk = PrivateKey.generate()
-pk = sk.public_key.encode(bytes)
+pk = sk.public_key
+print(pk)
+print(bytes(pk))
 
 def receive():
     """Handles receiving of messages."""
@@ -76,8 +78,8 @@ ADDR = (HOST, PORT)
 client_socket = socket(AF_INET, SOCK_STREAM)
 client_socket.connect(ADDR)
 #sending publik key to server
-client_socket.send(pk)
-
+client_socket.send(bytes(pk))
+data = client_socket.recv(1024)
 receive_thread = Thread(target=receive)
 receive_thread.start()
 tkinter.mainloop()  # Starts GUI execution.

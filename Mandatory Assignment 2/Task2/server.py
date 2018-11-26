@@ -6,6 +6,8 @@ from threading import Thread
 """For AES encryption and Public key encryption"""
 import nacl.secret
 import nacl.utils
+import nacl.encoding
+import base64
 from nacl.public import PrivateKey, SealedBox
 
 """Creation of general key"""
@@ -24,6 +26,15 @@ def accept_incoming_connections():
 
 
 def handle_client(client):  # Takes client socket as argument.
+    #receiving the public key from recent user
+    pk = client.recv(1024)
+    print(pk)
+    
+    #creating sealed box and sending key to client
+    box = SealedBox(pk.encode('Curve25519'))
+    encryptedKey = box.encrypt(gk)
+    client.sendto(encryptedKey, addresses[client])
+
     """Handles a single client connection."""
 
     name = client.recv(BUFSIZ).decode("utf8")
@@ -32,14 +43,6 @@ def handle_client(client):  # Takes client socket as argument.
     msg = "%s has joined the chat!" % name
     broadcast(bytes(msg, "utf8"))
     clients[client] = name
-
-    #receiving the public key from recent user
-    pk = SERVER.recvfrom(BUFSIZ)
-    print(pk)
-    #creating sealed box and sending key to client
-    box = SealedBox(pk)
-    encryptedKey = box.encrypt(gk)
-    SERVER.sendto(encryptedKey, addresses[client])
 
     while True:
         msg = client.recv(BUFSIZ)
