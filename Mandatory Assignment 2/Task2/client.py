@@ -12,8 +12,6 @@ from nacl.public import PrivateKey, SealedBox
 """Creation of RSA keys"""
 sk = PrivateKey.generate()
 pk = sk.public_key
-print(pk)
-print(bytes(pk))
 
 def receive():
     """Handles receiving of messages."""
@@ -21,6 +19,7 @@ def receive():
     while True:
         try:
             msg = client_socket.recv(BUFSIZ).decode("utf8")
+            print(msg)
             msg_list.insert(tkinter.END, msg)
         except OSError:  # Possibly client has left the chat.
             break
@@ -77,9 +76,13 @@ ADDR = (HOST, PORT)
 
 client_socket = socket(AF_INET, SOCK_STREAM)
 client_socket.connect(ADDR)
+
 #sending publik key to server
 client_socket.send(bytes(pk))
-data = client_socket.recv(1024)
+#receiving general key
+symKey = client_socket.recv(1024)
+print(symKey)
+
 receive_thread = Thread(target=receive)
 receive_thread.start()
 tkinter.mainloop()  # Starts GUI execution.

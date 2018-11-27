@@ -8,7 +8,7 @@ import nacl.secret
 import nacl.utils
 import nacl.encoding
 import base64
-from nacl.public import PrivateKey, SealedBox
+from nacl.public import PrivateKey, SealedBox, PublicKey
 
 """Creation of general key"""
 print("General key is being created")
@@ -28,12 +28,12 @@ def accept_incoming_connections():
 def handle_client(client):  # Takes client socket as argument.
     #receiving the public key from recent user
     pk = client.recv(1024)
-    print(pk)
     
     #creating sealed box and sending key to client
-    box = SealedBox(pk.encode('Curve25519'))
+    box = SealedBox(PublicKey(pk))
     encryptedKey = box.encrypt(gk)
-    client.sendto(encryptedKey, addresses[client])
+    
+    client.send(bytes(encryptedKey))
 
     """Handles a single client connection."""
 
