@@ -4,22 +4,17 @@ from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 import tkinter
 
-"""For AES encryption and Public key encryption"""
+"""For AES encryption and Symmetric key encryption"""
 import nacl.secret
 import nacl.utils
 from nacl.public import PrivateKey, SealedBox
 
-"""Creation of RSA keys"""
-sk = PrivateKey.generate()
-pk = sk.public_key
 
 def receive():
     """Handles receiving of messages."""
-    # Decrypting should happen here
     while True:
         try:
             msg = client_socket.recv(BUFSIZ).decode("utf8")
-            print(msg)
             msg_list.insert(tkinter.END, msg)
         except OSError:  # Possibly client has left the chat.
             break
@@ -27,13 +22,29 @@ def receive():
 
 def send(event=None):  # event is passed by binders.
     """Handles sending of messages."""
-    # Encrypting should happen here
     msg = my_msg.get()
     my_msg.set("")  # Clears input field.
     client_socket.send(bytes(msg, "utf8"))
     if msg == "{quit}":
         client_socket.close()
         top.quit()
+
+def encryption():
+    """Handles Creation of keys and receiving of keys and inititalize encryption process"""
+
+    #Creation of RSA Keys
+    sk = PrivateKey.generate()
+    pk = sk.public_key
+
+    #Sending key to server
+    print("Sending public key to server")
+    client_socket.send(bytes(pk))
+
+    #Receiving symmetric key
+    symmKey = client_socket.recv(BUFSIZ)
+    print(symmKey)
+    print("received symmetric key")
+
 
 
 def on_closing(event=None):
@@ -77,11 +88,8 @@ ADDR = (HOST, PORT)
 client_socket = socket(AF_INET, SOCK_STREAM)
 client_socket.connect(ADDR)
 
-#sending publik key to server
-client_socket.send(bytes(pk))
-#receiving general key
-symKey = client_socket.recv(1024)
-print(symKey)
+#Starting the encryption process
+encryption()
 
 receive_thread = Thread(target=receive)
 receive_thread.start()

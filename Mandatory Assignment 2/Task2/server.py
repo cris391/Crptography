@@ -3,11 +3,9 @@
 from socket import AF_INET, socket, SOCK_STREAM
 from threading import Thread
 
-"""For AES encryption and Public key encryption"""
+"""For AES encryption and Symmetric key encryption"""
 import nacl.secret
 import nacl.utils
-import nacl.encoding
-import base64
 from nacl.public import PrivateKey, SealedBox, PublicKey
 
 """Creation of general key"""
@@ -19,6 +17,15 @@ def accept_incoming_connections():
     """Sets up handling for incoming clients."""
     while True:
         client, client_address = SERVER.accept()
+        #receiving the public key from recent user
+        pk = client.recv(BUFSIZ)
+        
+        #creating sealed box and sending key to client
+        box = SealedBox(PublicKey(pk))
+        encryptedKey = box.encrypt(gk)
+        print("sending symmetric key")
+        client.send(bytes(encryptedKey))
+
         print("%s:%s has connected." % client_address)
         client.send(bytes("Greetings from the cave! Now type your name and press enter!", "utf8"))
         addresses[client] = client_address
@@ -26,15 +33,6 @@ def accept_incoming_connections():
 
 
 def handle_client(client):  # Takes client socket as argument.
-    #receiving the public key from recent user
-    pk = client.recv(1024)
-    
-    #creating sealed box and sending key to client
-    box = SealedBox(PublicKey(pk))
-    encryptedKey = box.encrypt(gk)
-    
-    client.send(bytes(encryptedKey))
-
     """Handles a single client connection."""
 
     name = client.recv(BUFSIZ).decode("utf8")
@@ -47,8 +45,7 @@ def handle_client(client):  # Takes client socket as argument.
     while True:
         msg = client.recv(BUFSIZ)
         if msg != bytes("{quit}", "utf8"):
-                broadcast(msg, name+": ")
-                
+            broadcast(msg, name+": ")
         else:
             client.send(bytes("{quit}", "utf8"))
             client.close()
