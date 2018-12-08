@@ -9,9 +9,7 @@ import nacl.utils
 from nacl.public import PrivateKey, SealedBox, PublicKey
 
 """Creation of general key"""
-print("General key is being created")
 gk = key = nacl.utils.random(nacl.secret.SecretBox.KEY_SIZE)
-print("General key is created")
 
 def accept_incoming_connections():
     """Sets up handling for incoming clients."""
@@ -23,11 +21,12 @@ def accept_incoming_connections():
         #creating sealed box and sending key to client
         box = SealedBox(PublicKey(pk))
         encryptedKey = box.encrypt(gk)
-        print("sending symmetric key")
         client.send(bytes(encryptedKey))
 
         print("%s:%s has connected." % client_address)
-        client.send(bytes("Greetings from the cave! Now type your name and press enter!", "utf8"))
+        greeting = "Greetings from the cave! Now type your name and press enter!".encode(encoding='utf-8')
+        encryptedGreet = nacl.secret.SecretBox(gk).encrypt(greeting)
+        client.send(bytes(encryptedGreet))
         addresses[client] = client_address
         Thread(target=handle_client, args=(client,)).start()
 
@@ -35,15 +34,15 @@ def accept_incoming_connections():
 def handle_client(client):  # Takes client socket as argument.
     """Handles a single client connection."""
 
-    name = client.recv(BUFSIZ).decode("utf8")
+    name = nacl.secret.SecretBox(gk).decrypt(client.recv(BUFSIZ))
     welcome = 'Welcome %s! If you ever want to quit, type {quit} to exit.' % name
-    client.send(bytes(welcome, "utf8"))
+    client.send(nacl.secret.SecretBox(gk).encrypt(welcome))
     msg = "%s has joined the chat!" % name
     broadcast(bytes(msg, "utf8"))
     clients[client] = name
 
     while True:
-        msg = client.recv(BUFSIZ)
+        msg = nacl.secret.SecretBox(gk).decrypt(client.recv(BUFSIZ))
         if msg != bytes("{quit}", "utf8"):
             broadcast(msg, name+": ")
         else:

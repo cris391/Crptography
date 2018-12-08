@@ -9,12 +9,15 @@ import nacl.secret
 import nacl.utils
 from nacl.public import PrivateKey, SealedBox
 
+#Creation of RSA Keys
+sk = PrivateKey.generate()
+pk = sk.public_key
 
 def receive():
     """Handles receiving of messages."""
     while True:
         try:
-            msg = client_socket.recv(BUFSIZ).decode("utf8")
+            msg = nacl.secret.SecretBox(gk).decrypt(client_socket.recv(BUFSIZ))
             msg_list.insert(tkinter.END, msg)
         except OSError:  # Possibly client has left the chat.
             break
@@ -24,17 +27,13 @@ def send(event=None):  # event is passed by binders.
     """Handles sending of messages."""
     msg = my_msg.get()
     my_msg.set("")  # Clears input field.
-    client_socket.send(bytes(msg, "utf8"))
+    client_socket.send(bytes(nacl.secret.SecretBox(gk).encrypt(msg)))
     if msg == "{quit}":
         client_socket.close()
         top.quit()
 
 def encryption():
-    """Handles Creation of keys and receiving of keys and inititalize encryption process"""
-
-    #Creation of RSA Keys
-    sk = PrivateKey.generate()
-    pk = sk.public_key
+    """Handles receiving of keys and inititalize encryption process"""
 
     #Sending key to server
     print("Sending public key to server")
@@ -42,8 +41,9 @@ def encryption():
 
     #Receiving symmetric key
     symmKey = client_socket.recv(BUFSIZ)
-    print(symmKey)
-    print("received symmetric key")
+    gk = SealedBox(sk).decrypt(symmKey)
+
+    return gk
 
 
 
@@ -89,7 +89,7 @@ client_socket = socket(AF_INET, SOCK_STREAM)
 client_socket.connect(ADDR)
 
 #Starting the encryption process
-encryption()
+gk = encryption()
 
 receive_thread = Thread(target=receive)
 receive_thread.start()
