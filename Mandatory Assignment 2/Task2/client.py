@@ -27,7 +27,8 @@ def send(event=None):  # event is passed by binders.
     """Handles sending of messages."""
     msg = my_msg.get()
     my_msg.set("")  # Clears input field.
-    client_socket.send(bytes(nacl.secret.SecretBox(gk).encrypt(msg)))
+    encryptedMsg= nacl.secret.SecretBox(gk).encrypt(msg)
+    client_socket.send(bytes(encryptedMsg, 'utf-8'))
     if msg == "{quit}":
         client_socket.close()
         top.quit()

@@ -1,0 +1,8 @@
+Security Design:
+We chose a hybrid deign. We use the Assymetric encryption to encrypt the sending of the symmetric key and then symmetric encryption for everything else.
+
+What would happen if there are 3 clients connected to the chat room? 
+
+Can you think of possible attacks?
+
+If so, how would you defend against them?

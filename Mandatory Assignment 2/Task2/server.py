@@ -36,7 +36,8 @@ def handle_client(client):  # Takes client socket as argument.
 
     name = nacl.secret.SecretBox(gk).decrypt(client.recv(BUFSIZ))
     welcome = 'Welcome %s! If you ever want to quit, type {quit} to exit.' % name
-    client.send(nacl.secret.SecretBox(gk).encrypt(welcome))
+    encryptedWelcome = nacl.secret.SecretBox(gk).encrypt(welcome)
+    client.send(bytes(encryptedWelcome))
     msg = "%s has joined the chat!" % name
     broadcast(bytes(msg, "utf8"))
     clients[client] = name
