@@ -2,7 +2,10 @@ Security Design:
 We chose a hybrid deign. We use the Assymetric encryption to encrypt the sending of the symmetric key and then symmetric encryption for everything else.
 
 What would happen if there are 3 clients connected to the chat room? 
+All 3 would have the symmetric key and their own assymetric set. The method still works.
 
 Can you think of possible attacks?
+There is a possibility that hackers would try to access the server to get the symmetric key, since the server is not secured only communication between server and client is.
 
 If so, how would you defend against them?
+Having a new symmetric key generated at an interval could be a solution.
